@@ -20,7 +20,7 @@ Asignatura de Sistemas Avanzados de Integración de la Información.
 
 # Resumen
 
-En este práctica buscamos combinar la información de diferentes fuentes de datos relacionadas con eventos de música, información de los artistas (como sus integrantes, su historia o artistas similares), opiniones en redes sociales sobre dicho grupo, vídeos de eventos similares, etc. Para ello, se realizará un estudio y descripción de las fuentes y se procederá a escribir un esquema intermedio que nos sirva para describir la información relevante de todas ellas. Una vez decidido dicho esquema, es importante analizar los "matching" entre las fuentes y el esquema intermedio, junto con otras consideraciones de completitud local o los patrones de acceso a las mismas. Por último, se hablará un poco de unos wrappers específicos para una consulta que un usuario futuro de la aplicación podría realizar.
+En esta práctica buscamos combinar la información de diferentes fuentes de datos relacionadas con eventos de música, información de los artistas (como sus integrantes, su historia o artistas similares), opiniones en redes sociales sobre dicho grupo, vídeos de eventos similares, etc. Para ello, se realizará un estudio y descripción de las fuentes y se procederá a escribir un esquema intermedio que nos sirva para describir la información relevante de todas ellas. Una vez decidido dicho esquema, es importante analizar los "matching" entre las fuentes y el esquema intermedio, junto con otras consideraciones de completitud local o los patrones de acceso a las mismas. Por último, se hablará un poco de unos wrappers específicos para una consulta que un usuario futuro de la aplicación podría realizar.
 
 # Factibilidad y existencia de la información
 
@@ -174,7 +174,7 @@ A priori, no podemos extraer restricciones de completitud local para ninguna de 
 
 Existen dos arquitecturas opuestas, conocidas como `Data Warehousing` y `Virtual Data Integration`. En la primera arquitectura, la información es extraída de las fuentes de datos y almacenada formando una réplica local, que posteriormente es consultada y analizada. En la segunda, los datos no son almacenados, están en las fuentes de datos y las consultas se realizan sobre dichas fuentes.
 
-En el próximo apartado mostramos como poner en marcha el mashup desde el primer punto de vista. Sin embargo, una aplicación final debería de recaer en un punto intermedio entre las dos arquitecturas, ya que, si bien es claro que ciertas relaciones son actualizadas con poca frecuencia como `Ciudad`, `Ubicación`, `Artista` e `Integrante`, las relaciones `Evento`, `Vídeo` y `Opinión` son mas cambiantes e interesará poder acceder a dicha información al instante.
+En el próximo apartado mostramos como poner en marcha el mashup desde el primer punto de vista. Sin embargo, una aplicación final debería de recaer en un punto intermedio entre las dos arquitecturas, ya que, si bien es claro que ciertas relaciones son actualizadas con poca frecuencia como `Ciudad`, `Ubicación`, `Artista` e `Integrante`, las relaciones `Evento`, `Vídeo` y `Opinión` son más cambiantes e interesará poder acceder a dicha información al instante.
 
 ## Data Warehousing
 
