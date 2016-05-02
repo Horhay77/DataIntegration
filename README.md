@@ -17,6 +17,7 @@ Asignatura de Sistemas Avanzados de Integración de la Información.
 - [Arquitecturas para la integración](#arquitecturas-para-la-integracion)
 - [Consultas](#consultas)
 - [Enlaces](#enlaces)
+
 # Resumen
 
 En este práctica buscamos combinar la información de diferentes fuentes de datos relacionadas con eventos de música, información de los artistas (como sus integrantes, su historia o artistas similares), opiniones en redes sociales sobre dicho grupo, vídeos de eventos similares, etc. Para ello, se realizará un estudio y descripción de las fuentes y se procederá a escribir un esquema intermedio que nos sirva para describir la información relevante de todas ellas. Una vez decidido dicho esquema, es importante analizar los "matching" entre las fuentes y el esquema intermedio, junto con otras consideraciones de completitud local o los patrones de acceso a las mismas. Por último, se hablará un poco de unos wrappers específicos para una consulta que un usuario futuro de la aplicación podría realizar.
