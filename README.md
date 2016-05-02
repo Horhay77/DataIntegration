@@ -1,51 +1,66 @@
-Practica 1: Mashup 
+Data Integration
 ==================
 Jorge Hernández de Benito
 Asignatura de Sistemas Avanzados de Integración de la Información.
 
-## Índice
+#Índice
+- [Resumen](#resumen)
+- [Factibilidad y existencia de la información](#factibilidad-y-existencia-de-la-informacion)
+- [Fuentes de datos](#fuentes-de-datos)
+- [Descripción de las fuentes](#descripcion-de-las-fuentes)
+	* [Last.fm](#s1-lastfm)
+	* [Dbpedia.org](#s2-dbpediaorg)
+	* [Twitter](#s3-twittercom)
+- [Esquema intermedio](#esquema-intermedio)
+	* [Mapping Global as View](#mapping-gav)
+	* [Mapping Local as View](#mapping-lav)
+- [Arquitecturas para la integración](#arquitecturas-para-la-integracion)
+- [Consultas](#consultas)
+- [Enlaces](#enlaces)
+# Resumen
 
-[TOC]
-
-# Planteamiento del Mashup
-
-El mashup consistirá en combinar y agregar la información de diferentes fuentes de datos, relacionadas con eventos de música, información de los artistas (como sus integrantes, su historia o artistas similares), opiniones en redes sociales sobre dicho grupo, vídeos de eventos similares, etc.
-
-Para ello, se tratará de usar un software similar al extinto Yahoo! Pipes. El software elegido es Data Integration (o Kettle) de Pentaho, cuya referencia puede encontrarse en el apartado de [enlaces](#enlaces).
+En este práctica buscamos combinar la información de diferentes fuentes de datos relacionadas con eventos de música, información de los artistas (como sus integrantes, su historia o artistas similares), opiniones en redes sociales sobre dicho grupo, vídeos de eventos similares, etc. Para ello, se realizará un estudio y descripción de las fuentes y se procederá a escribir un esquema intermedio que nos sirva para describir la información relevante de todas ellas. Una vez decidido dicho esquema, es importante analizar los "matching" entre las fuentes y el esquema intermedio, junto con otras consideraciones de completitud local o los patrones de acceso a las mismas. Por último, se hablará un poco de unos wrappers específicos para una consulta que un usuario futuro de la aplicación podría realizar.
 
 # Factibilidad y existencia de la información
 
-Desgraciadamente, no encontramos toda la información en un único sitio (es ello lo que motiva a realizar este mashup de uniformización). Sin embargo, la información se encuentra al alcance, ya sea mediante `Web scraping`, o a través de `consultas SPARQL`.
+La información que queremos mostrar no puede ser encontrada en un único sitio ( lo que motiva a realizar este mashup de uniformización). Sin embargo, la información se encuentra al alcance, ya sea mediante `Web scraping`, o a través de `consultas SPARQL`.
 
 Además, pueden surgir problemas causados por tener pocas fuentes de datos y específicas, ya que usaremos el modelo `Global as View`. Por ejemplo, si alguna de las fuentes deja de estar disponible o cambia el formato de los datos, ello conllevaría a una pérdida (parcial o total) de la funcionalidad, al no disponer de otras fuentes de donde extraer la información.
 
-## Fuentes de datos
+# Fuentes de datos
 
 Se consideran las siguientes fuentes de datos para realizar la agregación:
 
 - **S1:** *last.fm* : Red social de música en la que puedes acceder a los próximos eventos musicales cercanos a tu ubicación.
 
-- **S2:** *dbpedia.org* : Proyecto que busca extraer información estructurada de la Wikipedia, y crea a partir de esas estructuras una red semántica que puede ser accedida.
+- **S2:** *dbpedia.org* : Proyecto que busca extraer información estructurada de la Wikipedia, y crea a partir de esas estructuras una red semántica.
 
 - **S3:** *twitter.com* : Red social de microblogging con 300 millones de usuarios activos mensualmente que vierten públicamente sus opiniones. 
 
 - **S4:** *youtube.com* : Servicio de alojamiento de vídeos ampliamente usado, que contiene gran cantidad de vídeos musicales.
 
-### Descripcion de las fuentes
 
-Tratamos de detallar con la mayor precisión el esquema que creemos que hay detrás de cada una de las fuentes.
+## Descripcion de las fuentes
 
-#### S1: last.fm
+Tratamos de detallar con la mayor precisión el esquema que creemos que otorgamos a cada una de las fuentes. Como el esquema de las fuentes es externo a nosotros, nos inventamos uno teniendo en mente la información que queremos extraer de las mismas. Esto no quita que quizá se abarque alguna fuente en mayor medida, para futuras ampliaciones de una aplicación que usara las fuentes.
 
-He decidido identificar a cada una de las relaciones a través del enlace que es utilizado dentro de la página web para acceder a la información que se refiere a dicha relación. Por otro lado, a pesar de hacer una descripción detallada de la fuente, las relaciones a las que sacaremos partido son las tres primeras (**Evento**, **Actuador** y **Artista**).
+### S1: last.fm
+
+A pesar de hacer una descripción detallada de la fuente, las relaciones a las que sacaremos partido son las tres primeras (**Evento**, **Actuador** y **Artista**).
 
 - **S1.Evento** (url_evento, nombre_evento, fecha_evento, hora_evento, precio_evento, nombre_ubicacion, direccion_ubicacion, ciudad_ubicacion, pais_ubicacion, enlace_ubicación, latitud, longitud)
+	- url_evento es identificador de la relación y consiste en la url de last.fm de la que obtenemos la información asociada con el evento.
+	- precio_evento es un dato que puede estar o no estar, y en la mayoría de casos no está.
+	- Los campos terminados en _ubicacion se suelen referir al edificio o lugar geográfico donde se celebra el evento.
+	- enlace_ubicación es una url a una página web de la ubicación. Siguiendo la dirección nos saldríamos de la fuente de last.fm.
 	- Latitud y longitud no se corresponden con la posición geoespacial exacta en la que se celebra el evento, si no que es una posición cercana a dicho lugar. La aparición de estos atributos se debe a que el "formulario" del que se dispone para acceder a los eventos tiene estos dos parámetros.
 - **S1.Actuador** (url_evento, url_artista)
-
+	- url_evento es una clave foránea hacia la relación S1.Evento, mientras que url_artista lo es hacia la relación S1.Artista. En conjunto son la clave primaria de esta relación.
 - **S1.Artista** (url_artista, nombre_artista, biografía, versión_biografía)
-	- biografía es un texto claro con una determinada longitud.
-	- versión_biografía es un número que indica las veces que se ha revisado la biografía.
+	- url_artista es identificador de la relación y consiste en la url de last.fm de la que obtenemos la información asociada a un artista.
+	- nombre_artista es el nombre de la banda o artista en solitario en cuestión.
+	- biografía es un texto claro con una determinada longitud que habla brevemente sobre los orígenes y crecimiento del artista.
+	- versión_biografía es un número que indica las veces que se ha revisado la biografía y cual es la versión actual.
 
 - **S1.GéneroArtista** (url_artista, genero)
 
@@ -55,21 +70,21 @@ He decidido identificar a cada una de las relaciones a través del enlace que es
 
 - **S1.ArtistaSimilar** (url_artista1, url_artista2)
 
-#### S2: dbpedia.org
+### S2: dbpedia.org
 
-El grafo de dbpedia está bajo el modelo de datos RDF, por lo que los identificadores de las relaciones serán las propias IRI que identifica a cada recurso. Por otro lado, para ciertas propiedades algunos recursos contienen una lista de valores (traducido en una relación 1 - 0..*), lo que nos obliga a tener el siguiente conjunto de relaciones:
+El grafo de dbpedia está bajo el modelo de datos RDF, por lo que los identificadores de las relaciones serán las propias URI que identifica a cada recurso. Para realizar un modelado SQL observamos que algunas propiedades de los recursos contienen una lista de valores, lo que se traduciría en una relación 1 - 0..* y conlleva a la necesidad de extraer una relación para dicha propiedad. Obtenemos el siguiente conjunto de relaciones:
 
-- **S2.Ciudad** (iri_ciudad, nombre [foaf:name](), nombre_pais [dbo:country->rdfs:label](), latitud [geo:lat](), longitud [geo:long]())
+- **S2.Ciudad** (uri_ciudad, nombre [foaf:name](http://xmlns.com/foaf/spec/#term_name), nombre_pais [dbo:country->rdfs:label](https://www.w3.org/TR/rdf-schema/#ch_label), latitud [geo:lat](https://www.w3.org/2003/01/geo/wgs84_pos), longitud [geo:long](https://www.w3.org/2003/01/geo/wgs84_pos))
+	- Latitud y longitud se corresponden a un punto geográfico que está contenido dentro de la ciudad, sin saber exactamente si es el kilómetro cero u otro punto especial de la ciudad.
+- **S2.Artista** (uri_artista, nombre [dbp:name](http://dbpedia.org/property/name), fechaCreacion [dbo:yearsActive](http://dbpedia-live.openlinksw.com/property/yearsActive), descripcion [rdfs:comment](https://www.w3.org/TR/rdf-schema/#ch_comment))
 
-- **S2.Artista** (iri_artista, nombre [dbp:name](), fechaCreacion [dbo:yearsActive](), descripcion [rdfs:comment]())
+- **S2.AliasArtista** (uri_artista, alias [dbo:alias]())
+	- Algunas bandas con nombres largos suelen ser mencionados a través de sus alias, que pueden ser siglas o abreviaciones del nombre real de la banda.
+- **S2.GéneroArtista** (uri_artista, género [dbp:genre](http://dbpedia-live.openlinksw.com/ontology/genre))
 
-- **S2.AliasArtista** (iri_artista, alias [dbo:alias]())
+- **S2.Integrante** (uri_artista, integrante [dbo:bandMember](http://dbpedia-live.openlinksw.com/ontology/bandMember), nombre, edad, fecha_nacimiento)
 
-- **S2.GéneroArtista** (iri_artista, género [dbp:genre]())
-
-- **S2.Integrante** (iri_artista, integrante [dbo:bandMember](), nombre, edad, fecha_nacimiento)
-
-#### S3: twitter.com
+### S3: twitter.com
 
 A partir del [siguiente ejemplo](https://foomandoonian.files.wordpress.com/2010/04/anatomy-of-a-tweet-scaled1000.png) en formato JSON de un tweet extraemos el esquema subyacente relacional:
 
@@ -79,7 +94,9 @@ A partir del [siguiente ejemplo](https://foomandoonian.files.wordpress.com/2010/
 
 - **S3.Lugar** (id, url, nombre, nombre_completo, tipo, codigo_pais, nombre_pais)
 
-# Esquema intermedio
+Dado que en la imagen del ejemplo se describe cada uno de las propiedades, no se realizan aclaraciones de la semántica de las mismas.
+
+#Esquema intermedio
 
 - **Ciudad** ( *nombre*, *pais*, latitud, longitud)
 
@@ -147,6 +164,7 @@ Para ciertas vistas de las fuentes locales en las que queda bastante claro cuale
 - **S2.GéneroArtista** (iri_artista, género [dbp:genre]())
 
 - **S2.Integrante** (iri_artista, integrante [dbo:bandMember](), nombre, edad, fecha_nacimiento)
+
 ## Completitud de las fuentes
 
 A priori, no podemos extraer restricciones de completitud local para ninguna de las fuentes. 
@@ -225,10 +243,9 @@ Puesto que hemos usado el modelo `Global As View`, las consultas que podemos rea
 
 - Dado un artista, devolver la lista de los eventos de otros artistas similares, esto es, que coincidan en el género musical.
 
-Estas consultas se traducen en trabajos dentro del software Data Integration (o Kettle) de Pentaho sobre bases de datos que han sido introducidas a partir de los ficheros csv. El software permite, mediante drag and drop, realizar modificaciones/filtrados sobre las columnas y filas de las tablas, o usar las salidas de unas consultas como entradas para las siguientes, al menos en teoría. La realidad es que es más cómodo escribir las consultas SQL sobre tu esquema intermedio una vez has realizado el Warehouse.
+Traducción de las consultas sobre el esquema intermedio y despúes desdoblamiento de consultas.
 
 # Enlaces
 - [Twitter Search API](https://dev.twitter.com/rest/public/search).
 - [Youtube Search API](https://developers.google.com/youtube/v3/docs/search/list?hl=es#parmetros).
 - [Python RDF API](https://rdflib.github.io/sparqlwrapper/).
-- [Data Integration - Pentaho](http://community.pentaho.com/projects/data-integration/).
