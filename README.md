@@ -5,7 +5,7 @@ Asignatura de Sistemas Avanzados de Integración de la Información.
 
 #Índice
 - [Resumen](#resumen)
-- [Factibilidad y existencia de la información](#factibilidad-y-existencia-de-la-informacion)
+- [Factibilidad y existencia de la información](#factibilidad-y-existencia-de-la-información)
 - [Fuentes de datos](#fuentes-de-datos)
 - [Descripción de las fuentes](#descripcion-de-las-fuentes)
 	* [Last.fm](#s1-lastfm)
@@ -14,9 +14,9 @@ Asignatura de Sistemas Avanzados de Integración de la Información.
 - [Esquema intermedio](#esquema-intermedio)
 	* [Mapping Global as View](#mapping-gav)
 	* [Mapping Local as View](#mapping-lav)
-- [Arquitecturas para la integración](#arquitecturas-para-la-integracion)
+- [Arquitecturas para la integración](#arquitecturas-para-la-integración)
 - [Consultas](#consultas)
-- [Enlaces](#enlaces)
+- [Enlaces a recursos útiles](#enlaces)
 
 # Resumen
 
