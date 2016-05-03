@@ -6,15 +6,37 @@ import urllib
 import re
 import csv
 import sys
+import os.path
 from lxml import html
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
 debug = True
 lastfm_url = "http://www.last.fm"
+dbpedia_artist_dict = {}
 
 # En todo momento, a lo sumo 4 hilos están obteniendo información de last.fm
 lastfm_hilos = threading.Semaphore(4)
+
+event_writer = threading.Lock()
+artist_writer = threading.Lock()
+
+event_writer.acquire()
+if not os.path.exists("Evento.csv"):
+	with open("Evento.csv",'a') as csvfile:
+		fieldnames = ['id_evento', 'nombre', 'fecha','hora','precio','ciudad','pais','direccion']
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames,delimiter="|")
+		writer.writeheader()
+event_writer.release()
+
+
+artist_writer.acquire()
+if not os.path.exists("Artista.csv"):
+	with open("Artista.csv",'a') as csvfile:
+		fieldnames = ['uri_artista', 'nombre', 'fechaCreacion','descripcion']
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames,delimiter="|")
+		writer.writeheader()
+artist_writer.release()
 
 def scrap_event(event_url, geolat, geolong):
 	# Toma del recurso
@@ -73,9 +95,19 @@ def scrap_event(event_url, geolat, geolong):
 	# en el hashmap (-> diccionario) de la dbpedia. Si no existe, hay que buscarla para poder hacer el join.
 	artistas = content.xpath("//section[@id='line-up']//a[@class='link-block-target']")
 	for artista in artistas:
-		dbpedia_artist(artista.text)
+		if artista.text not in dbpedia_artist_dict:
+			dbpedia_artist(artista.text)
 
-	if debug:
+	event_writer.acquire()
+	with open("Evento.csv",'a') as csvfile:
+		fieldnames = ['id_evento', 'nombre', 'fecha','hora','precio','ciudad','pais','direccion']
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames,delimiter="|")
+		writer.writerow({'id_evento': url_evento, 'nombre': nombre_evento,
+						 'fecha': fecha_evento, 'hora': hora_evento,
+						 'precio': precio_evento, 'ciudad': ciudad_ubicacion,
+						 'pais': pais_ubicacion, 'direccion': direccion_ubicacion})
+	event_writer.release()
+	'''if debug:
 		print "\nNUEVO EVENTO:"
 		print "URL: " + url_evento
 		print "NOMBRE: " + nombre_evento
@@ -88,41 +120,54 @@ def scrap_event(event_url, geolat, geolong):
 		print "PAIS: " + pais_ubicacion
 		print "ENLACE: " + enlace_ubicacion
 		print "LATITUD: " + latitud
-		print "LONGITUD: " + longitud
+		print "LONGITUD: " + longitud'''
 
     # Liberamos el recurso
 	lastfm_hilos.release()
 
 def dbpedia_artist(artist_name):
+	# En el peor de los casos no extraemos nada
+	uri_artista = "http://jorgepedia.org/resource/"+artist_name;
+	nombre = "null"
+	fechaCreacion = "null"
+	descripcion = "null"
+
 	endpoint = SPARQLWrapper("http://dbpedia.org/sparql")
 	endpoint.setReturnFormat(JSON)
 	endpoint.setQuery("""
-		select distinct ?Concept ?Nombre ?FechaCreacion ?Descripcion ?Genero
+		select distinct ?Concept ?Nombre ?FechaCreacion ?Descripcion
 		where {
 			?Concept rdf:type dbo:Group .
 	  		?Concept dbp:name ?Nombre .
 			?Concept dbp:yearsActive ?FechaCreacion.
 			?Concept rdfs:comment ?Descripcion.
 			filter (langmatches(lang(?Descripcion), 'es')).
-			?Concept dbp:genre ?Genero.
 			filter regex(?Nombre , '"""+artist_name+"""' ,'i') .
 		}
 		limit 1.
         """)
 	artists = endpoint.query().convert()
+
 	for artist in artists["results"]["bindings"]:
-		# S2.Artista (uri_artista, nombre dbp:name, fechaCreacion dbo:yearsActive, descripcion rdfs:comment)
 		uri_artista = artist["Concept"]["value"]
 		nombre = artist["Nombre"]["value"]
 		fechaCreacion = artist["FechaCreacion"]["value"]
 		descripcion = artist["Descripcion"]["value"]
-		if debug:
-			print "\nNUEVO ARTISTA:"
-			print "URI: " + uri_artista
-			print "NOMBRE: " + nombre
-			print "FECHA CREACION: " + fechaCreacion
-			print "DESCRIPCION: " + descripcion
-	    
+
+    # Almacenamos el artista en un diccionario
+	dbpedia_artist_dict[artist_name]=[uri_artista, nombre, fechaCreacion, descripcion]
+
+	artist_writer.acquire()
+	with open("Artista.csv",'a') as csvfile:
+		fieldnames = ['uri_artista', 'nombre', 'fechaCreacion','descripcion']
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames,delimiter="|")
+		#
+		writer.writerow({'uri_artista': uri_artista.encode("utf-8"),
+						 'nombre': nombre.encode("utf-8"),
+						 'fechaCreacion': fechaCreacion.encode("utf-8"),
+						 'descripcion': descripcion.encode("utf-8")})
+	artist_writer.release()
+
 # Resources init:
 endpoint = SPARQLWrapper("http://dbpedia.org/sparql")
 endpoint.setReturnFormat(JSON)
