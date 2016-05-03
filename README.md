@@ -214,15 +214,15 @@ Obviamente, dependemos de que la página no reestructure su información, estrop
 
 Para cada uno de los artistas encontrados, realizamos la siguiente consulta SPARQL al [endpoint](http://dbpedia.org/sparql) de la fuente `S1 (dbpedia)`:
 
-	select distinct ?recurso  ?nombre ?fecha_nacimiento ?descripcion ?genero
+	select distinct ?recurso  ?nombre ?fechaCreacion ?descripcion ?genero
 	where {
 	  ?recurso rdf:type dbo:Group .
 	  ?recurso dbp:name ?nombre .
-	  ?recurso dbp:yearsActive ?fecha_nacimiento.
+	  ?recurso dbp:yearsActive ?fechaCreacion.
 	  ?recurso rdfs:comment ?descripcion.
-	  filter (langmatches(lang(?descripcion), 'es'))
+	  filter (langmatches(lang(?descripcion), 'es')).
 	  ?recurso dbp:genre ?genero.
-	  filter regex(?nombre , nombre_del_artista ,'i') .
+	  filter regex(?nombre , nombre_del_artista ,'i').
 	}
 	limit 1.
 
